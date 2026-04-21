@@ -5,14 +5,17 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     gcc \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install poetry==1.8.2
+# Install UV
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:$PATH"
 
 COPY pyproject.toml ./
 
-RUN poetry config virtualenvs.create false \
-    && poetry install --only main --no-root
+# Install dependencies
+RUN uv pip install --system -r pyproject.toml
 
 COPY collector/ ./collector/
 
