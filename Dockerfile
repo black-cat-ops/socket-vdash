@@ -12,10 +12,10 @@ RUN apt-get update && apt-get install -y \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
 
-COPY pyproject.toml ./
+COPY pyproject.toml README.md ./
 
-# Install dependencies from pyproject.toml
-RUN uv pip install --system .
+# Install only dependencies, not the package itself
+RUN uv pip install --system requests psycopg2-binary python-dotenv schedule click
 
 COPY collector/ ./collector/
 
