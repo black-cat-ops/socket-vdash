@@ -15,7 +15,7 @@ conn = psycopg2.connect(
     port=int(os.environ.get("POSTGRES_PORT", 5432)),
     dbname=os.environ.get("POSTGRES_DB", "socket_vdash"),
     user=os.environ.get("POSTGRES_USER", "socket"),
-    password=os.environ.get("POSTGRES_PASSWORD", "changeme"),
+    password=os.environ.get("POSTGRES_PASSWORD", "socket123"),
 )
 
 cur = conn.cursor()
