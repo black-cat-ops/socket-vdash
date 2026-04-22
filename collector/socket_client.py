@@ -15,8 +15,10 @@ logger = logging.getLogger(__name__)
 SOCKET_API_BASE = "https://api.socket.dev/v0"
 DEFAULT_TIMEOUT = 60
 
+
 class SocketAPIError(Exception):
     pass
+
 
 class SocketClient:
     def __init__(self, api_token=None, org_slug=None):
@@ -27,11 +29,11 @@ class SocketClient:
         self.session.headers.update({"Accept": "application/json"})
 
     def _get(self, path, params=None, stream=False):
-        url = f"{SOCKET_API_BASE}{path}"
+        url = SOCKET_API_BASE + path
         resp = self.session.get(url, params=params, timeout=DEFAULT_TIMEOUT, stream=stream)
         if resp.status_code == 429:
             retry_after = int(resp.headers.get("Retry-After", 60))
-            logger.warning(f"Rate limited. Retrying after {retry_after}s")
+            logger.warning("Rate limited. Retrying after %ss", retry_after)
             time.sleep(retry_after)
             resp = self.session.get(url, params=params, timeout=DEFAULT_TIMEOUT, stream=stream)
         if not stream:
@@ -42,17 +44,18 @@ class SocketClient:
         return self._get("/quota").json()
 
     def get_org_repos(self):
-        return self._get(f"/orgs/{self.org_slug}/repos").json().get("results", [])
+        return self._get("/orgs/" + self.org_slug + "/repos").json().get("results", [])
 
     def get_full_scans(self, repo=None, branch=None, limit=10):
         params = {"limit": limit}
-        if repo: params["repo"] = repo
-        if branch: params["branch"] = branch
-        return self._get(f"/orgs/{self.org_slug}/full-scans", params=params).json().get("results", [])
+        if repo:
+            params["repo"] = repo
+        if branch:
+            params["branch"] = branch
+        return self._get("/orgs/" + self.org_slug + "/full-scans", params=params).json().get("results", [])
 
-    def stream_full_scan(self, scan_id) -> Generator[dict, None, None]:
-        """Stream SBOM artifacts as NDJSON — this is how you get package scores/alerts."""
-        url = f"{SOCKET_API_BASE}/orgs/{self.org_slugfull-scans/{scan_id}"
+    def stream_full_scan(self, scan_id):
+        url = SOCKET_API_BASE + "/orgs/" + self.org_slug + "/full-scans/" + scan_id
         resp = self.session.get(url, timeout=DEFAULT_TIMEOUT, stream=True)
         resp.raise_for_status()
         count = 0
@@ -62,8 +65,8 @@ class SocketClient:
                     yield json.loads(line)
                     count += 1
                 except json.JSONDecodeError as e:
-                    logger.warning(f"NDJSON parse error: {e}")
-        logger.info(f"Streamed {count} artifacts from scan {scan_id}")
+                    logger.warning("NDJSON parse error: %s", e)
+        logger.info("Streamed %d artifacts from scan %s", count, scan_id)
 
     def get_org_security_policy(self):
-        return self._get(f"/orgs/{self.org_slug}/settings/security-policy").json()
+        return self._get("/orgs/" + self.org_slug + "/settings/security-policy").json()
