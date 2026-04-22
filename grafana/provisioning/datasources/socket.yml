@@ -6,7 +6,7 @@ datasources:
     url: postgres:5432
     user: socket
     secureJsonData:
-      password: changeme
+      password: socket123
     jsonData:
       database: socket_vdash
       sslmode: disable
